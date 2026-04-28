@@ -14,9 +14,10 @@ if (isDev) {
   }
 }
 
-const { format } = require('url');
-const { BrowserWindow, app, session, Menu, globalShortcut, ipcMain, nativeTheme } = require('electron');
+const { format, fileURLToPath } = require('url');
+const { BrowserWindow, app, session, Menu, globalShortcut, ipcMain, nativeTheme, shell } = require('electron');
 const { setContentSecurityPolicy } = require('electron-util');
+const { isAllowedExternalUrl, openExternalUrl } = require('./security/url-policy');
 
 if (isDev && process.env.ELECTRON_USER_DATA_PATH) {
   console.debug('`ELECTRON_USER_DATA_PATH` found, modifying `userData` path: \n'
@@ -72,6 +73,9 @@ const contentSecurityPolicy = [
   'connect-src \'self\' https://*.posthog.com',
   'font-src \'self\' https: data:;',
   'frame-src data:',
+  'object-src \'none\'',
+  'base-uri \'self\'',
+  'frame-ancestors \'none\'',
   'script-src \'self\' data:',
   // this has been commented out to make oauth2 work
   // "form-action 'none'",
@@ -91,6 +95,77 @@ const isLinux = process.platform === 'linux';
 
 let mainWindow;
 let appProtocolUrl;
+
+const isAppUrl = (url, appUrl) => {
+  try {
+    const parsedUrl = new URL(url);
+    const parsedAppUrl = new URL(appUrl);
+
+    if (isDev) {
+      return parsedUrl.protocol === 'http:'
+        && parsedUrl.hostname === 'localhost'
+        && parsedUrl.port === parsedAppUrl.port;
+    }
+
+    return parsedUrl.protocol === 'file:'
+      && parsedAppUrl.protocol === 'file:'
+      && path.normalize(fileURLToPath(parsedUrl)) === path.normalize(fileURLToPath(parsedAppUrl));
+  } catch (err) {
+    return false;
+  }
+};
+
+const openAllowedExternalUrl = (url) => {
+  return openExternalUrl(shell, url).catch((err) => {
+    console.error(err);
+  });
+};
+
+const blockOrExternalizeNavigation = (event, url, appUrl) => {
+  if (isAppUrl(url, appUrl)) {
+    return;
+  }
+
+  event.preventDefault();
+  if (isAllowedExternalUrl(url)) {
+    openAllowedExternalUrl(url);
+  }
+};
+
+const createAboutWindow = (version) => {
+  const aboutBruno = require('./app/about-bruno');
+  const aboutWindow = new BrowserWindow({
+    width: 350,
+    height: 250,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+  aboutWindow.removeMenu();
+  aboutWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(aboutBruno({ version }))}`);
+  return aboutWindow;
+};
+
+app.on('web-contents-created', (event, contents) => {
+  contents.on('will-attach-webview', (event, webPreferences) => {
+    delete webPreferences.preload;
+    delete webPreferences.preloadURL;
+    webPreferences.nodeIntegration = false;
+    webPreferences.contextIsolation = true;
+    webPreferences.sandbox = true;
+    webPreferences.allowRunningInsecureContent = false;
+  });
+
+  contents.setWindowOpenHandler(({ url }) => {
+    if (isAllowedExternalUrl(url)) {
+      openAllowedExternalUrl(url);
+    }
+
+    return { action: 'deny' };
+  });
+});
 
 // Helper function to save zoom percentage to preferences and notify renderer
 const saveZoomPreferences = async (percentage) => {
@@ -231,8 +306,10 @@ app.on('ready', async () => {
     show: false,
     backgroundColor: themeBg,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
+      // Preload uses CommonJS modules; keep renderer Node disabled while allowing preload require().
+      sandbox: false,
       preload: path.join(__dirname, 'preload.js'),
       webviewTag: true
     },
@@ -319,18 +396,13 @@ app.on('ready', async () => {
     ipcMain.emit('main:open-docs');
   });
 
+  ipcMain.handle('renderer:open-external', async (event, url) => {
+    return openExternalUrl(shell, url);
+  });
+
   ipcMain.handle('renderer:open-about', () => {
     const { version } = require('../package.json');
-    const aboutBruno = require('./app/about-bruno');
-    const aboutWindow = new BrowserWindow({
-      width: 350,
-      height: 250,
-      webPreferences: {
-        nodeIntegration: true
-      }
-    });
-    aboutWindow.removeMenu();
-    aboutWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(aboutBruno({ version }))}`);
+    createAboutWindow(version);
   });
 
   mainWindow.once('ready-to-show', () => {
@@ -343,7 +415,7 @@ app.on('ready', async () => {
     mainWindow.show();
   });
   const devPort = process.env.BRUNO_DEV_PORT || 3000;
-  const url = isDev
+  const appUrl = isDev
     ? `http://localhost:${devPort}`
     : format({
         pathname: path.join(__dirname, '../web/index.html'),
@@ -351,8 +423,8 @@ app.on('ready', async () => {
         slashes: true
       });
 
-  mainWindow.loadURL(url).catch((reason) => {
-    console.error(`Error: Failed to load URL: "${url}" (Electron shows a blank screen because of this).`);
+  mainWindow.loadURL(appUrl).catch((reason) => {
+    console.error(`Error: Failed to load URL: "${appUrl}" (Electron shows a blank screen because of this).`);
     console.error('Original message:', reason);
     if (isDev) {
       console.error(
@@ -405,27 +477,23 @@ app.on('ready', async () => {
     ipcMain.emit('main:start-quit-flow');
   });
 
-  mainWindow.webContents.on('will-redirect', (event, url) => {
-    event.preventDefault();
-    if (/^(http:\/\/|https:\/\/)/.test(url)) {
-      require('electron').shell.openExternal(url);
-    }
-  });
-
   mainWindow.webContents.once('did-finish-load', () => {
     if (appProtocolUrl) {
       handleAppProtocolUrl(appProtocolUrl);
     }
   });
 
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    blockOrExternalizeNavigation(event, url, appUrl);
+  });
+
+  mainWindow.webContents.on('will-redirect', (event, url) => {
+    blockOrExternalizeNavigation(event, url, appUrl);
+  });
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    try {
-      const { protocol } = new URL(url);
-      if (['https:', 'http:'].includes(protocol)) {
-        require('electron').shell.openExternal(url);
-      }
-    } catch (e) {
-      console.error(e);
+    if (isAllowedExternalUrl(url)) {
+      openAllowedExternalUrl(url);
     }
     return { action: 'deny' };
   });

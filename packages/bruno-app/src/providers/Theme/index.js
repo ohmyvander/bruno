@@ -10,6 +10,15 @@ import { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { ThemeProvider as SCThemeProvider } from 'styled-components';
 
 const validator = new Validator();
+const THEME_SCHEMA_BASE = 'bruno://theme/';
+
+export const validateThemeAgainstSchema = (
+  selectedTheme,
+  schema = themeSchema,
+  schemaValidator = validator
+) => {
+  return schemaValidator.validate(selectedTheme, schema, { base: THEME_SCHEMA_BASE });
+};
 
 // Helper: Get effective theme ('light' or 'dark') based on storedTheme
 const getEffectiveTheme = (storedTheme) => {
@@ -87,7 +96,7 @@ export const ThemeProvider = (props) => {
     }
 
     // Validate the theme against the schema
-    const validationResult = validator.validate(selectedTheme, themeSchema);
+    const validationResult = validateThemeAgainstSchema(selectedTheme);
     if (!validationResult.valid) {
       const errors = validationResult.errors?.map((e) => e.stack).join(', ') || 'Unknown validation error';
       console.error(`Theme "${variantName}" validation failed:`, errors);

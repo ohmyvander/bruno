@@ -102,7 +102,9 @@ const template = [
             width: 350,
             height: 250,
             webPreferences: {
-              nodeIntegration: true
+              nodeIntegration: false,
+              contextIsolation: true,
+              sandbox: true
             }
           });
           aboutWindow.removeMenu();

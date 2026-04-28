@@ -30,6 +30,8 @@ const authorizeUserInWindow = ({ authorizeUrl, callbackUrl, session, additionalH
     const window = new BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
         partition: session
       },
       show: false

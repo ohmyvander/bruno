@@ -76,6 +76,7 @@ const { REQUEST_TYPES } = require('../utils/constants');
 const { cancelOAuth2AuthorizationRequest, isOauth2AuthorizationRequestInProgress } = require('../utils/oauth2-protocol-handler');
 const { findUniqueFolderName } = require('../utils/collection-import');
 const { saveSpecAndUpdateMetadata, cleanupSpecFilesForCollection } = require('./openapi-sync');
+const { openExternalUrl } = require('../security/url-policy');
 
 const environmentSecretsStore = new EnvironmentSecretsStore();
 const collectionSecurityStore = new CollectionSecurityStore();
@@ -2445,7 +2446,9 @@ const registerMainEventHandlers = (mainWindow, watcher) => {
 
   ipcMain.on('main:open-docs', () => {
     const docsURL = 'https://docs.usebruno.com';
-    shell.openExternal(docsURL);
+    openExternalUrl(shell, docsURL).catch((err) => {
+      console.error(err);
+    });
   });
 
   ipcMain.on('main:collection-opened', async (win, pathname, uid, brunoConfig) => {

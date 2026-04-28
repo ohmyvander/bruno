@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
+import findLastIndex from 'lodash/findLastIndex';
 import last from 'lodash/last';
 
 // todo: errors should be tracked in each slice and displayed as toasts
@@ -363,7 +364,7 @@ export const tabsSlice = createSlice({
       // Find the last closed tab for this collection (LIFO). If no collectionUid is
       // available, reopen the latest closed tab globally.
       const index = collectionUid
-        ? state.recentlyClosedTabs.findLastIndex((t) => t.collectionUid === collectionUid)
+        ? findLastIndex(state.recentlyClosedTabs, (t) => t.collectionUid === collectionUid)
         : state.recentlyClosedTabs.length - 1;
       if (index === -1) return;
 

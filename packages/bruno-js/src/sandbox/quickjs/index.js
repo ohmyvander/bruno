@@ -6,7 +6,8 @@ const addTestShimToContext = require('./shims/test');
 const addLibraryShimsToContext = require('./shims/lib');
 const addLocalModuleLoaderShimToContext = require('./shims/local-module');
 const { getRequireCode } = require('./shims/require');
-const { newQuickJSWASMModule, memoizePromiseFactory } = require('quickjs-emscripten');
+const { memoizePromiseFactory } = require('quickjs-emscripten');
+const { newQuickJsNodeWasmModule } = require('./quickjs-module');
 
 // execute `npm run sandbox:bundle-libraries` if the below file doesn't exist
 const getBundledCode = require('../bundle-browser-rollup');
@@ -16,7 +17,7 @@ const addCryptoUtilsShimToContext = require('./shims/lib/crypto-utils');
 const { wrapScriptInClosure, SANDBOX } = require('../../utils/sandbox');
 
 let QuickJSSyncContext;
-const loader = memoizePromiseFactory(() => newQuickJSWASMModule());
+const loader = memoizePromiseFactory(() => newQuickJsNodeWasmModule());
 const getContext = (opts) => loader().then((mod) => (QuickJSSyncContext = mod.newContext(opts)));
 getContext();
 
@@ -98,7 +99,7 @@ const executeQuickJsVmAsync = async ({ script: externalScript, context: external
   externalScript = externalScript?.trim();
 
   try {
-    const module = await newQuickJSWASMModule();
+    const module = await newQuickJsNodeWasmModule();
     const vm = module.newContext();
 
     // add crypto utilities required by the crypto-js library in bundledCode

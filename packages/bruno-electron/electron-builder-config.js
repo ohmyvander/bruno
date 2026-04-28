@@ -3,7 +3,7 @@ require('dotenv').config({ path: process.env.DOTENV_PATH });
 const config = {
   appId: 'com.usebruno.app',
   productName: 'Bruno',
-  electronVersion: '37.6.1',
+  electronVersion: '22.3.27',
   directories: {
     buildResources: 'resources',
     output: 'out'
@@ -97,7 +97,7 @@ const config = {
     target: [
       {
         target: 'nsis',
-        arch: ['x64', 'arm64']
+        arch: ['x64']
       }
     ],
     sign: null,

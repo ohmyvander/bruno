@@ -5,6 +5,7 @@ const { removeApiSpecUid } = require('../cache/apiSpecUids');
 const { removeApiSpecFromWorkspace } = require('../utils/workspace-config');
 const path = require('path');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 const registerRendererEventHandlers = (mainWindow, watcher, lastOpenedApiSpecs) => {
   ipcMain.handle('renderer:open-api-spec', (event, workspacePath = null) => {

@@ -1,6 +1,6 @@
 import { parseQueryParams, buildQueryString as stringifyQueryParams } from '@usebruno/common/utils';
 import { uuid } from 'utils/common';
-import { find, map, forOwn, concat, filter, each, cloneDeep, get, set, findIndex } from 'lodash';
+import { find, findLast, map, forOwn, concat, filter, each, cloneDeep, get, set, findIndex } from 'lodash';
 import { createSlice } from '@reduxjs/toolkit';
 import { hexy as hexdump } from 'hexy';
 import {
@@ -3082,64 +3082,64 @@ export const collectionsSlice = createSlice({
         }
 
         if (type === 'request-sent') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.status = 'running';
           item.requestSent = action.payload.requestSent;
         }
 
         if (type === 'response-received') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.status = 'completed';
           item.responseReceived = action.payload.responseReceived;
         }
 
         if (type === 'test-results') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.testResults = action.payload.testResults;
         }
 
         if (type === 'test-results-pre-request') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.preRequestTestResults = action.payload.preRequestTestResults;
         }
 
         if (type === 'test-results-post-response') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.postResponseTestResults = action.payload.postResponseTestResults;
         }
 
         if (type === 'assertion-results') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.assertionResults = action.payload.assertionResults;
         }
 
         if (type === 'error') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.error = action.payload.error;
           item.responseReceived = action.payload.responseReceived;
           item.status = 'error';
         }
 
         if (type === 'runner-request-skipped') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.status = 'skipped';
           item.responseReceived = action.payload.responseReceived;
         }
 
         if (type === 'post-response-script-execution') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.postResponseScriptErrorMessage = action.payload.errorMessage;
           item.postResponseScriptErrorContext = action.payload.errorContext || null;
         }
 
         if (type === 'test-script-execution') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.testScriptErrorMessage = action.payload.errorMessage;
           item.testScriptErrorContext = action.payload.errorContext || null;
         }
 
         if (type === 'pre-request-script-execution') {
-          const item = collection.runnerResult.items.findLast((i) => i.uid === request.uid);
+          const item = findLast(collection.runnerResult.items, (i) => i.uid === request.uid);
           item.preRequestScriptErrorMessage = action.payload.errorMessage;
           item.preRequestScriptErrorContext = action.payload.errorContext || null;
         }
