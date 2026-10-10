@@ -37,7 +37,7 @@ module.exports = [
       commonjs({
         transformMixedEsModules: true
       }),
-      typescript({ tsconfig: './tsconfig.json' }),
+      typescript({ tsconfig: './tsconfig.json', typescript: require('typescript') }),
       terser({
         maxWorkers: Math.max(1, os.availableParallelism())
       })

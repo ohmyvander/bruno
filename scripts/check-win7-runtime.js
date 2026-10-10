@@ -9,8 +9,8 @@ const appRequire = createRequire(path.join(root, 'packages/bruno-electron/packag
 if (!process.versions.electron) {
   const result = spawnSync(appRequire('electron'), [__filename], {
     cwd: root,
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-    stdio: 'inherit'
+    env: { ...process.env, NODE_OPTIONS: '', ELECTRON_RUN_AS_NODE: '1' },
+    stdio: 'inherit', windowsHide: true, timeout: 90000
   });
   if (result.error) throw result.error;
   process.exit(result.status === null ? 1 : result.status);
@@ -18,6 +18,7 @@ if (!process.versions.electron) {
 
 const run = async () => {
   assert.strictEqual(process.versions.electron, '22.3.27');
+  assert.strictEqual(process.versions.modules, '110');
   appRequire('./src/compat/node').installNodeCompat();
   assert.strictEqual(await new Response('compatible').text(), 'compatible');
   assert.deepStrictEqual(structuredClone({ bytes: [1, 2] }), { bytes: [1, 2] });

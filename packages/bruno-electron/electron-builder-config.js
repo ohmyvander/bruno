@@ -23,6 +23,7 @@ const config = {
     }
   ],
   files: ['**/*'],
+  asarUnpack: ['**/node_modules/better-sqlite3/**', '**/node_modules/node-pty/**'],
   afterSign: 'notarize.js',
   mac: {
     artifactName: '${name}_${version}_${arch}_${os}.${ext}',

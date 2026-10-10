@@ -18,11 +18,20 @@ vm.runInNewContext(read('packages/bruno-electron/electron-builder-config.js'), {
 });
 
 assert.strictEqual(electronPackage.devDependencies.electron, '22.3.27');
+assert.strictEqual(electronPackage.dependencies['node-pty'], '1.0.0', 'WinPTY must remain available on Windows 7');
+assert(!electronPackage.dependencies['@lydell/node-pty'], 'ConPTY-only terminal package is incompatible with Windows 7');
+const sqlitePackage = JSON.parse(read('packages/bruno-sqlite/package.json'));
+assert.strictEqual(sqlitePackage.dependencies['better-sqlite3'], '8.7.0');
 assert.strictEqual(configModule.exports.electronVersion, '22.3.27');
 const lockedElectron = lock.packages['packages/bruno-electron/node_modules/electron']
   || lock.packages['node_modules/electron'];
 assert(lockedElectron, 'Electron must be present in the lockfile');
 assert.strictEqual(lockedElectron.version, '22.3.27');
+for (const [name, version] of [['node-pty', '1.0.0'], ['better-sqlite3', '8.7.0']]) {
+  const locked = lock.packages[`packages/bruno-electron/node_modules/${name}`] || lock.packages[`node_modules/${name}`];
+  assert(locked, `${name} must be present in the lockfile`);
+  assert.strictEqual(locked.version, version);
+}
 for (const target of configModule.exports.win.target) {
   assert.deepStrictEqual(Array.from(target.arch), ['x64']);
 }
@@ -42,5 +51,5 @@ for (const url of ['file:///C:/Windows/notepad.exe', 'javascript:alert(1)', 'dat
   assert(!isAllowedExternalUrl(url));
 }
 
-console.log('Win7 baseline: Electron pin, x64 target, IPC and external URL boundaries passed.');
+console.log('Win7 baseline: Electron/SQLite/WinPTY pins, x64 target, IPC and external URL boundaries passed.');
 console.log('This source check does not replace packaged-app testing on Windows 7 SP1 x64.');
