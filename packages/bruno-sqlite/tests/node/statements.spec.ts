@@ -1,4 +1,4 @@
-import { DatabaseSync } from 'node:sqlite';
+import { DatabaseSync } from '../../src/node/sqlite-compat';
 import type { StatementDef, StatementType } from '../../src/shared/types';
 
 const defs: StatementDef[] = [

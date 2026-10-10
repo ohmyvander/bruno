@@ -1,4 +1,5 @@
-import { DatabaseSync, DatabaseSyncOptions } from 'node:sqlite';
+import { DatabaseSync } from './sqlite-compat';
+import type { DatabaseSync as NativeDatabase, DatabaseSyncOptions } from 'node:sqlite';
 import { createHash } from 'node:crypto';
 import type { Migration } from '../shared/types';
 
@@ -25,7 +26,7 @@ export const isDatabaseMigrationError = (err: unknown): err is DatabaseMigration
   typeof err === 'object' && err !== null && MIGRATION_ERROR in err;
 
 export class DB {
-  _db: DatabaseSync | undefined = undefined;
+  _db: NativeDatabase | undefined = undefined;
   _migrations_table: string = `CREATE TABLE IF NOT EXISTS _migrations (
     sequence INTEGER NOT NULL UNIQUE,
     name TEXT PRIMARY KEY,
@@ -76,7 +77,7 @@ export class DB {
     this._applyPending(db, available);
   }
 
-  _rollbackObsolete(db: DatabaseSync, maxSequence: number): void {
+  _rollbackObsolete(db: NativeDatabase, maxSequence: number): void {
     const obsolete = db
       .prepare(`SELECT sequence, down FROM _migrations WHERE sequence > ? ORDER BY sequence DESC`)
       .all(maxSequence) as { sequence: number; down: string }[];
@@ -90,7 +91,7 @@ export class DB {
     }
   }
 
-  _applyPending(db: DatabaseSync, migrations: Migration[]): void {
+  _applyPending(db: NativeDatabase, migrations: Migration[]): void {
     const appliedRows = db
       .prepare(`SELECT sequence, up_hash, down_hash FROM _migrations`)
       .all() as { sequence: number; up_hash: string; down_hash: string }[];

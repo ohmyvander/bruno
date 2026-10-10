@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { DatabaseSync } from '../../src/node/sqlite-compat';
 import { vacuumIntoStatement } from '../../scripts/lib/sql';
 
 describe('vacuumIntoStatement', () => {

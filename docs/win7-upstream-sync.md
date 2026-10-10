@@ -32,6 +32,24 @@ installing dependencies. It is not an OS compatibility certification.
 including local HTTP fixtures for AI generation and streaming. Install Electron
 before running it. This tests the real embedded Node, not the build host's Node.
 
+`npm run test:win7:sqlite` runs the SQLite behavioral suite on Electron 22.
+First generate SQLite artifacts and install the better-sqlite3 8.7.0 prebuild
+for Electron ABI 110, win32-x64 (not a build-host Node ABI). For example:
+
+```powershell
+npm ci --ignore-scripts --legacy-peer-deps
+node packages/bruno-electron/node_modules/electron/install.js
+Push-Location node_modules/better-sqlite3
+node ../prebuild-install/bin.js --runtime electron --target 22.3.27 --arch x64
+Pop-Location
+npm run build:bruno-sqlite
+npm run test:win7:sqlite
+```
+
+Ignoring install scripts avoids compiling this legacy addon against modern
+build-host Node. Other native dependencies must also be rebuilt for Electron
+before packaging; this snippet is only the SQLite validation prerequisite.
+
 Windows 7 acceptance must use the installed, packaged application, not just
 Node or a modern browser. Verify:
 
@@ -60,6 +78,9 @@ Node or a modern browser. Verify:
 - Node adapter and existing preload/URL/constants tests: 4 suites, 8 tests pass.
 - Electron 22 runtime: Web APIs, AWS/parser loading, AI generation and streaming
   pass. Version pins are compatibility choices, not a security-update guarantee.
-- SQLite, Electron protocol and updated IPC adapters: pending.
+- SQLite: native backend retained on modern Node; Electron 22 uses better-sqlite3
+  8.7.0 with ABI 110. Both backends pass 62 tests in 7 suites (2 upstream tests
+  remain skipped). Built-package migrations and all 19 statements also pass.
+- Electron protocol and updated IPC adapters: pending.
 - Packaged Electron 22 checks: pending.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.

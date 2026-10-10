@@ -23,6 +23,15 @@ const run = async () => {
   assert.deepStrictEqual(structuredClone({ bytes: [1, 2] }), { bytes: [1, 2] });
   assert.strictEqual(appRequire('@apidevtools/json-schema-ref-parser').$RefParser instanceof Function, true);
   assert.strictEqual(typeof appRequire('@aws-sdk/credential-providers').fromIni, 'function');
+  const { createDatabase } = appRequire('@usebruno/sqlite');
+  const database = createDatabase(':memory:');
+  assert.ok(database.db?._db, 'SQLite backend must open, not silently disable storage');
+  try {
+    assert.strictEqual(database.statements._prepared.size, database.statements._defs.size);
+    assert.strictEqual(database.db._db.prepare('SELECT count(*) AS count FROM _migrations').get().count, 5);
+  } finally {
+    database.db.close();
+  }
 
   const http = require('http');
   const server = http.createServer((req, res) => {
@@ -65,7 +74,7 @@ const run = async () => {
     server.closeAllConnections?.();
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading and AI generation/streaming passed.`);
+  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading, SQLite migrations/statements and AI generation/streaming passed.`);
   console.log('Windows 7 OS and packaged GUI acceptance are still required.');
 };
 
