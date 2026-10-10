@@ -2,12 +2,14 @@ const _ = require('lodash');
 const chai = require('chai');
 const { nanoid } = require('nanoid');
 const Bru = require('../bru');
+const { getUnresolvedVariableCollector } = require('../unresolved-variables');
 const BrunoRequest = require('../bruno-request');
 const { evaluateJsTemplateLiteral, evaluateJsExpression, createResponseParser } = require('../utils');
 const { interpolateString } = require('../interpolate-string');
 const { executeQuickJsVm } = require('../sandbox/quickjs');
 
 const Ajv = require('ajv');
+const addFormats = require('ajv-formats');
 const { expect } = chai;
 chai.use(require('chai-string'));
 chai.use(function (chai, utils) {
@@ -26,9 +28,30 @@ chai.use(function (chai, utils) {
 });
 
 // Custom assertion for JSON Schema validation
+const defaultAjv = new Ajv({ allErrors: true });
+addFormats(defaultAjv);
+
+const SUPPORTED_SCHEMA_VERSIONS = [
+  'http://json-schema.org/draft-07/schema#',
+  'http://json-schema.org/draft-07/schema'
+];
+
 chai.use(function (chai) {
   chai.Assertion.addMethod('jsonSchema', function (schema, ajvOptions) {
-    const ajv = new Ajv({ allErrors: true, ...ajvOptions });
+    if (schema && schema.$schema && !SUPPORTED_SCHEMA_VERSIONS.includes(schema.$schema)) {
+      this.assert(
+        false,
+        `Unsupported JSON Schema version: "${schema.$schema}". Bruno currently only supports Draft-07 (http://json-schema.org/draft-07/schema#). Please update your schema to be Draft-07 compatible and remove the $schema property.`,
+        `Unsupported JSON Schema version: "${schema.$schema}".`
+      );
+    }
+    let ajv;
+    if (ajvOptions) {
+      ajv = new Ajv({ allErrors: true, ...ajvOptions });
+      addFormats(ajv);
+    } else {
+      ajv = defaultAjv;
+    }
     let validate;
     try {
       validate = ajv.compile(schema);
@@ -329,7 +352,7 @@ const evaluateJsExpressionBasedOnRuntime = (expr, context, runtime) => {
   return evaluateJsExpression(expr, context);
 };
 
-const evaluateRhsOperand = (rhsOperand, operator, context, runtime) => {
+const evaluateRhsOperand = (rhsOperand, operator, context, runtime, onUnresolved) => {
   if (isUnaryOperator(operator)) {
     return;
   }
@@ -341,7 +364,8 @@ const evaluateRhsOperand = (rhsOperand, operator, context, runtime) => {
     requestVariables: context.bru.requestVariables,
     runtimeVariables: context.bru.runtimeVariables,
     envVariables: context.bru.envVariables,
-    processEnvVars: context.bru.processEnvVars
+    processEnvVars: context.bru.processEnvVars,
+    onUnresolved
   };
 
   // gracefully allow both a,b as well as [a, b]
@@ -396,6 +420,7 @@ class AssertRuntime {
 
     const promptVariables = request?.promptVariables || {};
     const certsAndProxyConfig = request?.certsAndProxyConfig;
+    const onUnresolved = getUnresolvedVariableCollector(request);
     const bru = new Bru({
       runtime: this.runtime,
       envVariables,
@@ -407,7 +432,8 @@ class AssertRuntime {
       globalEnvironmentVariables,
       promptVariables,
       certsAndProxyConfig,
-      requestUrl: request?.url
+      requestUrl: request?.url,
+      onUnresolved
     });
     const req = new BrunoRequest(request);
     const res = createResponseParser(response);
@@ -440,7 +466,7 @@ class AssertRuntime {
 
       try {
         const lhs = evaluateJsExpressionBasedOnRuntime(lhsExpr, context, this.runtime);
-        const rhs = evaluateRhsOperand(rhsOperand, operator, context, this.runtime);
+        const rhs = evaluateRhsOperand(rhsOperand, operator, context, this.runtime, onUnresolved);
 
         switch (operator) {
           case 'eq':

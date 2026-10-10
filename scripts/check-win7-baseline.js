@@ -19,7 +19,10 @@ vm.runInNewContext(read('packages/bruno-electron/electron-builder-config.js'), {
 
 assert.strictEqual(electronPackage.devDependencies.electron, '22.3.27');
 assert.strictEqual(configModule.exports.electronVersion, '22.3.27');
-assert.strictEqual(lock.packages['node_modules/electron'].version, '22.3.27');
+const lockedElectron = lock.packages['packages/bruno-electron/node_modules/electron']
+  || lock.packages['node_modules/electron'];
+assert(lockedElectron, 'Electron must be present in the lockfile');
+assert.strictEqual(lockedElectron.version, '22.3.27');
 for (const target of configModule.exports.win.target) {
   assert.deepStrictEqual(Array.from(target.arch), ['x64']);
 }

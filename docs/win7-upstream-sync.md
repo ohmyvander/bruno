@@ -44,7 +44,10 @@ Node or a modern browser. Verify:
 
 ## Progress
 
-- Baseline: source/configuration check passes; no dependencies installed yet.
-- Upstream merge and runtime adapters: pending.
+- Baseline: source/configuration check passes.
+- Upstream merge: all 801 upstream commits included; conflicts reconciled while
+  retaining the Electron pin, IPC restrictions, URL policy, frontend fixes and
+  CommonJS QuickJS loader. Lockfile regenerated with npm.
+- Runtime adapters: pending; the merge alone is not a runnable Win7 release.
 - Packaged Electron 22 checks: pending.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.

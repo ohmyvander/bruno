@@ -10,15 +10,42 @@ const assertAllowedChannel = (allowed, type, channel) => {
     throw new Error(`Blocked IPC ${type} channel: ${channel}`);
   }
 };
+const { isBenchmarkEnabled } = require('./utils/benchmark');
+const {
+  recordIpcInvokeStart,
+  recordIpcInvokeEnd,
+  drainIpcEvents
+} = require('./benchmark/preload');
+
+const benchmarkEnabled = isBenchmarkEnabled();
 
 contextBridge.exposeInMainWorld('isPlaywright', process.env.PLAYWRIGHT === 'true');
+contextBridge.exposeInMainWorld('isBenchmarkBuild', benchmarkEnabled);
+
+if (benchmarkEnabled) {
+  contextBridge.exposeInMainWorld('benchmarkDrainIpcEvents', drainIpcEvents);
+}
+
+const invokeWithBenchmark = async (channel, ...args) => {
+  if (!benchmarkEnabled || (typeof channel === 'string' && channel.startsWith('benchmark:'))) {
+    return ipcRenderer.invoke(channel, ...args);
+  }
+
+  const context = recordIpcInvokeStart(channel, ...args);
+
+  try {
+    return await ipcRenderer.invoke(channel, ...args);
+  } finally {
+    recordIpcInvokeEnd(channel, context);
+  }
+};
 
 contextBridge.exposeInMainWorld('ipcRenderer', {
   invoke: (channel, ...args) => {
     if (!isAllowedInvokeChannel(channel)) {
       return Promise.reject(new Error(`Blocked IPC invoke channel: ${channel}`));
     }
-    return ipcRenderer.invoke(channel, ...args);
+    return invokeWithBenchmark(channel, ...args);
   },
   send: (channel, ...args) => {
     assertAllowedChannel(isAllowedSendChannel, 'send', channel);
