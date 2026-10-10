@@ -47,6 +47,10 @@ Node. `setup:win7` installs Electron, downloads the ABI 110 SQLite prebuild and
 builds node-pty 1.0.0 (including WinPTY) against Electron 22 headers. It requires
 Python, VS 2022 C++ x64 build tools, a Windows SDK and the matching MSVC Spectre
 libraries. It does not disable Spectre mitigation to bypass missing libraries.
+If matching Microsoft libraries are extracted in a separate build-tools folder,
+set `BRUNO_WIN7_SPECTRE_LIB_DIR` to its `lib/spectre/x64` directory. Preparation
+passes that path to MSBuild while retaining `/Qspectre`; no system installation
+or fake non-Spectre library directory is required.
 
 `npm run build:win7` builds shared packages, sandbox libraries and the frontend,
 then creates the x64 installer. `npm run build:win7 -- --dir` creates an unpacked
@@ -118,15 +122,20 @@ Node or a modern browser. Verify:
 - Production frontend and shared packages build. Requests uses TypeScript 5.7.3
   to parse Faker's declarations; other upstream type and bundler warnings remain.
 - Build orchestration: prerequisite ordering and fail-closed packaging are covered
-  by `npm run test:win7:build` (9 tests).
+  by `npm run test:win7:build` (17 tests, including native preparation).
 - Terminal dependency: ConPTY-only @lydell/node-pty replaced with node-pty 1.0.0,
   which retains WinPTY. No silent terminal disablement or stream-to-pipe fallback.
-- Native packaging gate: currently fails with MSB8040 because the local VS 2022
-  installation lacks MSVC v143 x64 Spectre libraries. WinPTY addon validation
-  cannot pass until that component is installed and `setup:win7` succeeds.
-- Live GUI gate: even the minimal control document fails because this execution
-  environment cannot launch the renderer (launch-failed, exitCode 49), with GPU
-  child-process status -1073741515. No sandbox bypass was used to hide the failure.
+- Native packaging gate: passes on Electron 22 / ABI 110 after extracting the
+  matching Microsoft MSVC 14.40.33807 Spectre libraries into the workspace and
+  verifying the archive SHA256. WinPTY handles/output workers are released after
+  natural shell exit; three terminal lifecycle regression tests pass.
+- Native build environment: duplicate Path/PATH keys are normalized to avoid
+  MSBuild's MSB6001 environment dictionary error.
+- Live guest GUI gate: the user ran the test in a normal PowerShell on this host
+  and reported all protocol/isolation/update/404 checks passed. The agent's
+  restricted executor still fails with launch-failed/exitCode 49 (Chromium's
+  SBOX_ERROR_CANNOT_CREATE_RESTRICTED_TOKEN), alongside GPU status -1073741515.
+  No sandbox bypass or persistent filesystem ACL changes were used.
 - Installer/unpacked distribution and packaged startup checks: not completed;
   do not publish this branch as a verified Win7 release yet.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.
