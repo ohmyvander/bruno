@@ -146,7 +146,7 @@ const HttpMethodSelector = ({ method = DEFAULT_METHOD, onMethodSelect, showCaret
     const currentWidth = `calc(${Math.max(contentWidth, 1)}ch + 1rem)`;
 
     return (
-      <StyledWrapper>
+      <StyledWrapper $methodColor={methodColor}>
         <div className="flex method-selector custom-input-mode" style={{ color: methodColor }}>
           <div className="flex flex-col w-full">
             <input
@@ -173,7 +173,7 @@ const HttpMethodSelector = ({ method = DEFAULT_METHOD, onMethodSelect, showCaret
   }
 
   return (
-    <StyledWrapper>
+    <StyledWrapper $methodColor={methodColor}>
       <div className="flex method-selector" style={{ color: methodColor }}>
         <MenuDropdown
           items={menuItems}

@@ -78,6 +78,9 @@ Node or a modern browser. Verify:
 - Node adapter and existing preload/URL/constants tests: 4 suites, 8 tests pass.
 - Electron 22 runtime: Web APIs, AWS/parser loading, AI generation and streaming
   pass. Version pins are compatibility choices, not a security-update guarantee.
+- Built requests/JS packages and every dynamic faker function load and execute
+  on Electron 22. Repeated QuickJS expressions, asynchronous scripts with crypto,
+  and Node VM scripts using Cheerio pass the runtime smoke test.
 - SQLite: native backend retained on modern Node; Electron 22 uses better-sqlite3
   8.7.0 with ABI 110. Both backends pass 62 tests in 7 suites (2 upstream tests
   remain skipped). Built-package migrations and all 19 statements also pass.
@@ -91,5 +94,12 @@ Node or a modern browser. Verify:
   build host. gRPC renderer helpers: 2 tests pass (unbuilt optional canvas was
   temporarily excluded from non-canvas jsdom tests). The protocol Jest suite
   crashes in Electron 22's VM environment; a real GUI protocol test is pending.
+- Frontend: build targets Chromium 108 with usage polyfills; runtime styled CSS
+  uses alpha colors rather than unsupported color-mix. All 22 themes pass style
+  tests. Theme/startup/Swagger/method-selector tests pass (15 tests in 4 suites).
+- QuickJS: CommonJS loader plus upstream teardown/trap/lifecycle regression
+  tests pass (38 tests in 4 suites). Node 16 crypto uses webcrypto explicitly.
+- Production frontend and all shared packages build; requests currently emits
+  upstream TypeScript/Faker declaration warnings, to be addressed in build tools.
 - Packaged Electron 22 checks: pending.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.

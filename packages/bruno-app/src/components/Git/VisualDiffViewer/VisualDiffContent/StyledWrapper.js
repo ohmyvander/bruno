@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { rgba } from 'polished';
 
 const StyledWrapper = styled.div`
   height: 100%;
@@ -165,14 +166,14 @@ const StyledWrapper = styled.div`
       word-break: break-all;
 
       &.changed {
-        background: color-mix(in srgb, ${(props) => props.theme.colors.text.warning} 20%, transparent);
+        background: (props) => rgba(props.theme.colors.text.warning, 0.2);
         padding: 0.125rem 0.25rem;
         border-radius: ${(props) => props.theme.border.radius.sm};
       }
     }
 
     .method.changed {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.warning} 30%, transparent);
+      background: (props) => rgba(props.theme.colors.text.warning, 0.3);
       color: ${(props) => props.theme.colors.text.warning};
     }
   }
@@ -182,18 +183,18 @@ const StyledWrapper = styled.div`
     border-radius: 2px;
 
     &.added {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 25%, transparent);
+      background: (props) => rgba(props.theme.colors.text.green, 0.25);
       color: ${(props) => props.theme.colors.text.green};
     }
 
     &.deleted {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 25%, transparent);
+      background: (props) => rgba(props.theme.colors.text.danger, 0.25);
       color: ${(props) => props.theme.colors.text.danger};
       text-decoration: line-through;
     }
 
     &.modified {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.warning} 25%, transparent);
+      background: (props) => rgba(props.theme.colors.text.warning, 0.25);
       color: ${(props) => props.theme.colors.text.warning};
     }
   }
@@ -218,15 +219,15 @@ const StyledWrapper = styled.div`
     }
 
     tr.added {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 10%, transparent);
+      background: (props) => rgba(props.theme.colors.text.green, 0.1);
     }
 
     tr.deleted {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 10%, transparent);
+      background: (props) => rgba(props.theme.colors.text.danger, 0.1);
     }
 
     tr.modified {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.warning} 10%, transparent);
+      background: (props) => rgba(props.theme.colors.text.warning, 0.1);
     }
 
     .checkbox-cell {
@@ -265,17 +266,17 @@ const StyledWrapper = styled.div`
       font-weight: 600;
 
       &.added {
-        background: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 13%, transparent);
+        background: (props) => rgba(props.theme.colors.text.green, 0.13);
         color: ${(props) => props.theme.colors.text.green};
       }
 
       &.deleted {
-        background: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 13%, transparent);
+        background: (props) => rgba(props.theme.colors.text.danger, 0.13);
         color: ${(props) => props.theme.colors.text.danger};
       }
 
       &.modified {
-        background: color-mix(in srgb, ${(props) => props.theme.colors.text.warning} 13%, transparent);
+        background: (props) => rgba(props.theme.colors.text.warning, 0.13);
         color: ${(props) => props.theme.colors.text.warning};
       }
     }
@@ -298,12 +299,12 @@ const StyledWrapper = styled.div`
       }
 
       &.added {
-        background: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 15%, transparent);
+        background: (props) => rgba(props.theme.colors.text.green, 0.15);
         color: ${(props) => props.theme.colors.text.green};
       }
 
       &.deleted {
-        background: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 15%, transparent);
+        background: (props) => rgba(props.theme.colors.text.danger, 0.15);
         color: ${(props) => props.theme.colors.text.danger};
         text-decoration: line-through;
       }
@@ -371,7 +372,7 @@ const StyledWrapper = styled.div`
       background: ${(props) => props.theme.sidebar.bg};
 
       &.changed {
-        background: color-mix(in srgb, ${(props) => props.theme.colors.text.warning} 20%, transparent);
+        background: (props) => rgba(props.theme.colors.text.warning, 0.2);
         color: ${(props) => props.theme.colors.text.warning};
       }
     }
@@ -420,20 +421,20 @@ const StyledWrapper = styled.div`
     border: 1px solid ${(props) => props.theme.border.border1};
 
     &.added {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 15%, transparent);
+      background: (props) => rgba(props.theme.colors.text.green, 0.15);
       border-color: ${(props) => props.theme.colors.text.green};
       color: ${(props) => props.theme.colors.text.green};
     }
 
     &.deleted {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 15%, transparent);
+      background: (props) => rgba(props.theme.colors.text.danger, 0.15);
       border-color: ${(props) => props.theme.colors.text.danger};
       color: ${(props) => props.theme.colors.text.danger};
       text-decoration: line-through;
     }
 
     &.modified {
-      background: color-mix(in srgb, ${(props) => props.theme.colors.text.warning} 15%, transparent);
+      background: (props) => rgba(props.theme.colors.text.warning, 0.15);
       border-color: ${(props) => props.theme.colors.text.warning};
       color: ${(props) => props.theme.colors.text.warning};
     }

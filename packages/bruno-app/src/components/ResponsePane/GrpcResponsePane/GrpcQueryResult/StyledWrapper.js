@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { rgba } from 'polished';
 
 const StyledWrapper = styled.div`
   height: 100%;
@@ -60,7 +61,7 @@ const StyledWrapper = styled.div`
     font-size: ${(props) => props.theme.font.size.xs};
     font-weight: 500;
     color: ${(props) => props.theme.colors.text.green};
-    background-color: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 10%, transparent);
+    background-color: (props) => rgba(props.theme.colors.text.green, 0.1);
     border-radius: ${(props) => props.theme.border.radius.sm};
   }
 

@@ -18,6 +18,10 @@ const remoteImageDomains = (process.env.BRUNO_REMOTE_IMAGE_DOMAINS || 'd3icksk7s
   .filter(Boolean);
 
 export default defineConfig({
+  output: {
+    overrideBrowserslist: ['Chrome 108'],
+    polyfill: 'usage'
+  },
   plugins: [
     pluginNodePolyfill(),
     pluginReact(),

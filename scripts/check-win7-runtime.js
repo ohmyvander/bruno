@@ -32,6 +32,27 @@ const run = async () => {
   } finally {
     database.db.close();
   }
+  assert.strictEqual(typeof appRequire('@usebruno/requests').makeAxiosInstance, 'function');
+  const { mockDataFunctions } = appRequire('@usebruno/common');
+  for (const [name, generate] of Object.entries(mockDataFunctions)) assert.notStrictEqual(generate(), undefined, name);
+  const { ScriptRuntime, runScriptInNodeVm } = appRequire('@usebruno/js');
+  assert.strictEqual(typeof ScriptRuntime, 'function');
+  const Bru = appRequire('@usebruno/js/src/bru');
+  const bru = new Bru({ runtime: 'quickjs', envVariables: {}, runtimeVariables: {}, processEnvVars: {}, collectionPath: root, collectionName: 'Win7 Smoke' });
+  const sandbox = appRequire('@usebruno/js/src/sandbox/quickjs');
+  console.log('Checking QuickJS loading and repeated execution...');
+  await sandbox.loader();
+  for (let i = 0; i < 10; i++) {
+    assert.strictEqual(sandbox.executeQuickJsVm({ script: 'value + 1', scriptType: 'expression', context: { value: i } }), i + 1);
+  }
+  await sandbox.executeQuickJsVmAsync({
+    script: "require('chai').expect(1 + 2).to.equal(3); const bytes = new Uint8Array(8); if (crypto.getRandomValues(bytes) !== bytes) throw new Error('crypto shim failed');",
+    context: { bru }, collectionPath: root
+  });
+  await runScriptInNodeVm({
+    script: "const cheerio = require('cheerio'); if (cheerio.load('<p>compatible</p>')('p').text() !== 'compatible') throw new Error('Node VM failed');",
+    context: { bru }, collectionPath: root, scriptingConfig: {}
+  });
 
   const http = require('http');
   const server = http.createServer((req, res) => {
@@ -74,11 +95,15 @@ const run = async () => {
     server.closeAllConnections?.();
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading, SQLite migrations/statements and AI generation/streaming passed.`);
+  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading, SQLite, faker, QuickJS/Node VM and AI generation/streaming passed.`);
   console.log('Windows 7 OS and packaged GUI acceptance are still required.');
 };
 
-run().catch((err) => {
+const watchdog = setTimeout(() => {
+  console.error('Electron runtime smoke test did not settle within 60 seconds');
+  process.exit(1);
+}, 60000);
+run().then(() => clearTimeout(watchdog)).catch((err) => {
   console.error(err);
   process.exit(1);
 });

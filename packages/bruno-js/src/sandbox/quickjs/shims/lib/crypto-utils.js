@@ -56,7 +56,7 @@ const addCryptoUtilsShimToContext = async (vm) => {
         throw new Error('getRandomValues: ArrayBufferView byte length exceeds 65536');
       }
 
-      crypto.getRandomValues(typedArray);
+      crypto.webcrypto.getRandomValues(typedArray);
 
       const byteArray = Array.from(typedArray);
 

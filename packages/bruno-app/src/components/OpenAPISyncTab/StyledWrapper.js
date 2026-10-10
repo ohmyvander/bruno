@@ -1575,11 +1575,11 @@ const StyledWrapper = styled.div`
         text-overflow: ellipsis;
 
         &.diff-kind-del {
-          background-color: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 22%, transparent);
+          background-color: (props) => rgba(props.theme.colors.text.danger, 0.22);
         }
 
         &.diff-kind-ins {
-          background-color: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 15%, transparent);
+          background-color: (props) => rgba(props.theme.colors.text.green, 0.15);
         }
 
         &.diff-kind-empty {
@@ -1595,11 +1595,11 @@ const StyledWrapper = styled.div`
         overflow: hidden;
 
         &.diff-kind-del {
-          background-color: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 22%, transparent);
+          background-color: (props) => rgba(props.theme.colors.text.danger, 0.22);
         }
 
         &.diff-kind-ins {
-          background-color: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 15%, transparent);
+          background-color: (props) => rgba(props.theme.colors.text.green, 0.15);
         }
 
         &.diff-kind-empty {
@@ -1621,12 +1621,12 @@ const StyledWrapper = styled.div`
         scrollbar-width: thin;
 
         del {
-          background-color: color-mix(in srgb, ${(props) => props.theme.colors.text.danger} 40%, transparent);
+          background-color: (props) => rgba(props.theme.colors.text.danger, 0.4);
           text-decoration: none;
         }
 
         ins {
-          background-color: color-mix(in srgb, ${(props) => props.theme.colors.text.green} 40%, transparent);
+          background-color: (props) => rgba(props.theme.colors.text.green, 0.4);
           text-decoration: none;
         }
       }

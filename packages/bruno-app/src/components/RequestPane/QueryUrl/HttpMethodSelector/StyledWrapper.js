@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { rgba } from 'polished';
 
 const Wrapper = styled.div`
   font-size: ${(props) => props.theme.font.size.base};
@@ -22,7 +23,7 @@ const Wrapper = styled.div`
 
     &:not(.custom-input-mode):hover,
     &:has(button[aria-expanded="true"]) {
-      background-color: color-mix(in srgb, currentColor 15%, transparent);
+      background-color: ${(props) => rgba(props.$methodColor || props.theme.text, 0.15)};
     }
 
 
