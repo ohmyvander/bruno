@@ -55,17 +55,49 @@ or fake non-Spectre library directory is required.
 `npm run build:win7` builds shared packages, sandbox libraries and the frontend,
 then creates the x64 installer. `npm run build:win7 -- --dir` creates an unpacked
 distribution instead. It runs runtime, SQLite, forced-WinPTY and live GUI gates
-first, fails on errors, retains previous `out` artifacts, and unpacks native
-modules from asar. Passing these build-host gates does not replace Win7 acceptance.
+first, then repeats runtime/native/startup acceptance against the packaged
+application. It fails on errors, retains previous `out` artifacts, excludes them
+from new ASARs, and unpacks native modules. Passing these build-host gates does
+not replace Win7 acceptance.
 Optional mirrors: `ELECTRON_MIRROR`, `ELECTRON_HEADERS_MIRROR`, and
 `npm_config_better_sqlite3_binary_host_mirror`.
 
 `npm run test:win7:native` explicitly exercises WinPTY on the real Electron
 binary, even on newer Windows where ConPTY would normally be selected.
 `npm run test:win7:gui` checks a hidden renderer and the real guest protocol.
-`npm run test:win7:app` checks main-process startup, renderer mounting and the
-isolated preload after preparing `packages/bruno-electron/web`. GUI tests use
+`npm run test:win7:app` checks main-process startup, sample collection onboarding,
+renderer-ready IPC and the isolated preload after preparing
+`packages/bruno-electron/web`. GUI tests use
 temporary userData and Documents paths, not the user's application profile.
+
+`npm run test:win7:package -- packages/bruno-electron/out/win-unpacked --gui`
+checks ASAR content, x64 native PE headers, unpacked addons, and runtime/native/
+GUI behavior using that distribution's `Bruno.exe` and dependencies. The launcher
+pauses packaged startup on a loopback inspector to redirect paths and hide the
+window before application code executes. It does not patch the application or
+disable Chromium sandboxing. It disconnects the inspector before awaiting exit.
+Results and payload hashes are written to `out/win7-acceptance.json`; Windows 7
+OS acceptance is always recorded separately as pending.
+
+### Windows-only signing-tool cache workaround
+
+electron-builder 24.13.3's official winCodeSign archive includes macOS symlinks.
+If extraction fails with "Cannot create symbolic link", reuse the downloaded
+archive after verifying it, excluding only the unused macOS directory. This
+preserves Windows resource editing/signing tools and requires no privilege or
+system-policy changes. The build uses a workspace-local builder cache by default.
+
+```powershell
+$env:ELECTRON_BUILDER_CACHE = Join-Path (Get-Location) '.cache/electron-builder'
+$archive = Get-ChildItem "$env:ELECTRON_BUILDER_CACHE/winCodeSign" -Filter '*.7z' | Select-Object -First 1
+$expected = 'CDAEC7154DDA7CC31F88D886E2489379A0625A737D610B5AE7F62A12F16743A4'
+if ((Get-FileHash -LiteralPath $archive.FullName -Algorithm SHA256).Hash -ne $expected) { throw 'Unexpected winCodeSign archive' }
+& ./node_modules/7zip-bin/win/x64/7za.exe x $archive.FullName "-o$env:ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0" '-xr!darwin' -y
+if ($LASTEXITCODE -ne 0) { throw 'winCodeSign extraction failed' }
+```
+
+The verified archive is the official `winCodeSign-2.6.0.7z` from
+`electron-userland/electron-builder-binaries`, not replacement tool binaries.
 
 Windows 7 acceptance must use the installed, packaged application, not just
 Node or a modern browser. Verify:
@@ -112,8 +144,8 @@ Node or a modern browser. Verify:
   channel names now use the registered handlers and expected payloads.
 - App-preview protocol: Electron 22 stream-protocol fallback retains the guest
   partition, secure scheme, per-owner origin, live HTML updates and 404 behavior.
-- Node adapters/protocol/storage IPC/worker pool/preload/URL/constants: 38 tests
-  in 8 suites pass on the build host. gRPC renderer helpers: 2 tests pass (unbuilt optional canvas was
+- Node adapters/protocol/storage IPC/worker pool/preload/URL/constants/terminal: 41 tests
+  in 9 suites pass on the build host. gRPC renderer helpers: 2 tests pass (unbuilt optional canvas was
   temporarily excluded from non-canvas jsdom tests). The protocol Jest suite
   exits with 0x80000003 in Electron 22's VM environment; live GUI verification
   remains separate from these mocked protocol tests.
@@ -125,7 +157,8 @@ Node or a modern browser. Verify:
 - Production frontend and shared packages build. Requests uses TypeScript 5.7.3
   to parse Faker's declarations; other upstream type and bundler warnings remain.
 - Build orchestration: prerequisite ordering and fail-closed packaging are covered
-  by `npm run test:win7:build` (17 tests, including native preparation).
+  by `npm run test:win7:build` (28 tests, including native preparation, GUI
+  completion/error handling, packaged PE validation and inspector teardown).
 - Terminal dependency: ConPTY-only @lydell/node-pty replaced with node-pty 1.0.0,
   which retains WinPTY. No silent terminal disablement or stream-to-pipe fallback.
 - Native packaging gate: passes on Electron 22 / ABI 110 after extracting the
@@ -143,6 +176,14 @@ Node or a modern browser. Verify:
   errors which are now fixed. Startup acceptance must await onboarding and
   renderer-ready IPC, detect swallowed main-process errors and verify the sample
   collection, rather than reporting success on the first renderer mount.
-- Installer/unpacked distribution and packaged startup checks: not completed;
-  do not publish this branch as a verified Win7 release yet.
+- Current-host packaged acceptance: the user reran the candidate in a normal
+  PowerShell and reported ASAR/native headers, runtime, forced WinPTY and full GUI
+  gates passed, with a normal return to the shell. The JSON report confirms these
+  four checks passed on Windows build 26200; Win7 remains pending.
+- Deliverables: NSIS installer and unpacked ZIP generated from that same candidate.
+  Installer/ZIP integrity checks pass; all 333 payload files in each artifact
+  match the tested unpacked distribution. Extracted installer runtime/WinPTY
+  checks also pass. Installation/upgrade/uninstall were
+  not run against the user's existing installation. See
+  `docs/win7-release-acceptance.md` for artifact paths, hashes and remaining checks.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.
