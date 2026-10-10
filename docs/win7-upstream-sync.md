@@ -28,6 +28,10 @@ not a release candidate until all runtime adapters and acceptance tests pass.
 `npm run test:win7:baseline` checks source/configuration invariants without
 installing dependencies. It is not an OS compatibility certification.
 
+`npm run test:win7:runtime` launches the pinned Electron binary in Node mode,
+including local HTTP fixtures for AI generation and streaming. Install Electron
+before running it. This tests the real embedded Node, not the build host's Node.
+
 Windows 7 acceptance must use the installed, packaged application, not just
 Node or a modern browser. Verify:
 
@@ -48,6 +52,14 @@ Node or a modern browser. Verify:
 - Upstream merge: all 801 upstream commits included; conflicts reconciled while
   retaining the Electron pin, IPC restrictions, URL policy, frontend fixes and
   CommonJS QuickJS loader. Lockfile regenerated with npm.
-- Runtime adapters: pending; the merge alone is not a runnable Win7 release.
+- Node adapters: Web APIs installed before application imports. AWS credential
+  provider and reference parser pinned to Node 16-compatible versions; Cheerio
+  retained without its Node 18-only fetch dependency. AI SDK declares Node 18,
+  but generation and streaming pass with the compatibility layer on the actual
+  Electron 22 / Node 16.17.1 runtime. Other providers still need acceptance tests.
+- Node adapter and existing preload/URL/constants tests: 4 suites, 8 tests pass.
+- Electron 22 runtime: Web APIs, AWS/parser loading, AI generation and streaming
+  pass. Version pins are compatibility choices, not a security-update guarantee.
+- SQLite, Electron protocol and updated IPC adapters: pending.
 - Packaged Electron 22 checks: pending.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.

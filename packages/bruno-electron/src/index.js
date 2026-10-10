@@ -1,3 +1,5 @@
+require('./compat/node').installNodeCompat();
+
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('node:child_process');
