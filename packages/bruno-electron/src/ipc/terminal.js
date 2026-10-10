@@ -51,8 +51,13 @@ class TerminalManager {
 
         // Handle terminal exit
         ptyProcess.onExit(({ exitCode, signal }) => {
+          const active = this.terminals.has(sessionId);
+          this.terminals.delete(sessionId);
+          if (active && process.platform === 'win32' && Number(os.release().split('.')[2]) < 18309) {
+            // WinPTY retains its handles and output worker after a natural exit.
+            try { ptyProcess.kill(); } catch (error) { console.warn('Failed to release WinPTY:', error); }
+          }
           try {
-            this.terminals.delete(sessionId);
             if (event.sender && !event.sender.isDestroyed()) {
               event.sender.send(`terminal:exit:${sessionId}`, { exitCode, signal });
             }

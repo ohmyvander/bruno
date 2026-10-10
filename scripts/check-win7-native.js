@@ -35,6 +35,7 @@ try {
     clearTimeout(timeout);
     assert.strictEqual(exitCode, 0);
     assert.ok(output.includes('win7-compatible'), output);
+    terminal.kill();
     console.log('Electron 22 / ABI 110: forced WinPTY terminal execution passed.');
   });
 } catch (error) {
