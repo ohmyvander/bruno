@@ -33,7 +33,10 @@ describe.each(['modern', 'legacy'])('%s guest protocol', (backend) => {
       }
       const response = await new Promise((resolve) => handler({ url }, resolve));
       let html = '';
-      for await (const chunk of response.data) html += chunk;
+      for await (const chunk of response.data) {
+        expect(Buffer.isBuffer(chunk)).toBe(true);
+        html += chunk.toString('utf8');
+      }
       return { status: response.statusCode, html, cache: response.headers['Cache-Control'] };
     };
   });

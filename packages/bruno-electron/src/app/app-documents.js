@@ -76,7 +76,7 @@ class AppDocuments {
     if (typeof guestProtocol.handle !== 'function') {
       guestProtocol.registerStreamProtocol(APP_SCHEME, (request, callback) => {
         const html = this.htmlByToken.get(new URL(request.url).hostname);
-        callback({ statusCode: html === undefined ? 404 : 200, headers, data: Readable.from([html ?? '']) });
+        callback({ statusCode: html === undefined ? 404 : 200, headers, data: Readable.from([Buffer.from(html ?? '', 'utf8')]) });
       });
       return;
     }
