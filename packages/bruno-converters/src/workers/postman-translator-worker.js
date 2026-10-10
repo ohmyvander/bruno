@@ -3,7 +3,7 @@ const path = require('node:path');
 const os = require('node:os');
 
 function getMaxWorkers() {
-  return Math.max(os.availableParallelism(), 1);
+  return Math.max(os.availableParallelism?.() || os.cpus().length || 1, 1);
 }
 
 class WorkerPool {

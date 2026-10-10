@@ -53,6 +53,21 @@ const run = async () => {
     script: "const cheerio = require('cheerio'); if (cheerio.load('<p>compatible</p>')('p').text() !== 'compatible') throw new Error('Node VM failed');",
     context: { bru }, collectionPath: root, scriptingConfig: {}
   });
+  const { Pool, JobType } = appRequire('./src/services/pool');
+  const pool = new Pool();
+  try {
+    const parsed = await pool.run(JobType.ParseFile, { collectionPath: root, relativePath: 'package.json', format: 'json', type: 'config' });
+    assert.strictEqual(parsed.data.name, 'usebruno');
+  } finally {
+    await pool.destroy({ force: true });
+  }
+  const converted = await appRequire('@usebruno/converters').postmanToBruno({
+    info: { name: 'Win7 Smoke', schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json' },
+    item: [{ name: 'sample', request: { method: 'GET', url: 'https://example.com' },
+      event: [{ listen: 'test', script: { type: 'text/javascript', exec: ["pm.test('smoke', function () { pm.expect(1 + 2).to.eql(3); });"] } }] }]
+  }, { useWorkers: true });
+  assert.strictEqual(converted.collection.name, 'Win7 Smoke');
+  assert.ok(converted.collection.items[0].request.script.res.includes('expect'));
 
   const http = require('http');
   const server = http.createServer((req, res) => {
@@ -95,7 +110,7 @@ const run = async () => {
     server.closeAllConnections?.();
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading, SQLite, faker, QuickJS/Node VM and AI generation/streaming passed.`);
+  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading, SQLite, faker, scripts, file/import workers and AI generation/streaming passed.`);
   console.log('Windows 7 OS and packaged GUI acceptance are still required.');
 };
 

@@ -12,7 +12,7 @@ class Pool {
   #pool;
 
   constructor({ size } = {}) {
-    const workers = Math.max(1, size ?? os.availableParallelism());
+    const workers = Math.max(1, size ?? (os.availableParallelism?.() || os.cpus().length || 1));
     this.#pool = workerpool.pool(WORKER_FILE, {
       maxWorkers: workers,
       workerType: 'thread',

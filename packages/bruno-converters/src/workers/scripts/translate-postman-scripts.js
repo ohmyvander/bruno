@@ -1,4 +1,6 @@
 const { parentPort } = require('node:worker_threads');
+// Workers do not inherit globals installed in the parent process.
+if (!globalThis.crypto) globalThis.crypto = require('node:crypto').webcrypto;
 const { postmanTranslation } = require('@usebruno/converters');
 
 parentPort.on('message', (workerData) => {
