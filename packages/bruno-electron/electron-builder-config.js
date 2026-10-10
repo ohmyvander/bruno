@@ -22,7 +22,7 @@ const config = {
       to: 'data/sample-collection.json'
     }
   ],
-  files: ['**/*'],
+  files: ['**/*', '!out/**/*'],
   asarUnpack: ['**/node_modules/better-sqlite3/**', '**/node_modules/node-pty/**'],
   afterSign: 'notarize.js',
   mac: {
@@ -102,7 +102,7 @@ const config = {
     ]
   },
   win: {
-    artifactName: '${name}_${version}_${arch}_win.${ext}',
+    artifactName: '${name}_${version}_${arch}_win7.${ext}',
     icon: 'resources/icons/win/icon.ico',
     target: [
       {

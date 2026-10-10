@@ -21,6 +21,7 @@
   ],
   "homepage": "https://usebruno.com",
   "devDependencies": {
+    "@electron/asar": "3.2.17",
     "@babel/parser": "7.29.8",
     "@eslint/compat": "^1.3.2",
     "@faker-js/faker": "^7.6.0",
@@ -51,7 +52,8 @@
     "pretty-quick": "^3.1.3",
     "randomstring": "^1.2.2",
     "rimraf": "^6.0.1",
-    "ts-jest": "^29.2.6"
+    "ts-jest": "^29.2.6",
+    "ws": "8.21.3"
   },
   "scripts": {
     "setup": "node ./scripts/setup.js",
@@ -93,7 +95,8 @@
     "test:win7:gui": "node scripts/check-win7-gui.js",
     "test:win7:app": "node scripts/check-win7-gui.js --app",
     "test:win7:native": "node scripts/check-win7-native.js",
-    "test:win7:build": "node --test scripts/build-win7.spec.js scripts/prepare-win7.spec.js",
+    "test:win7:package": "node scripts/check-win7-package.js",
+    "test:win7:build": "node --test scripts/build-win7.spec.js scripts/prepare-win7.spec.js scripts/check-win7-gui.spec.js scripts/check-win7-package.spec.js scripts/launch-win7-packaged-gui.spec.js",
     "setup:win7": "node scripts/prepare-win7.js",
     "build:win7": "node scripts/build-win7.js",
     "test:e2e:mock-server": "playwright test --project=mock-server",

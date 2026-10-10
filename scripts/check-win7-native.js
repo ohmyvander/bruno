@@ -4,9 +4,10 @@ const { createRequire } = require('module');
 const { spawnSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
-const appRequire = createRequire(path.join(root, 'packages/bruno-electron/package.json'));
+const appRoot = process.env.BRUNO_WIN7_APP_ROOT || path.join(root, 'packages/bruno-electron');
+const appRequire = createRequire(path.join(appRoot, 'package.json'));
 if (!process.versions.electron) {
-  const result = spawnSync(appRequire('electron'), [__filename], {
+  const result = spawnSync(process.env.BRUNO_WIN7_ELECTRON_BINARY || appRequire('electron'), [__filename], {
     cwd: root, env: { ...process.env, NODE_OPTIONS: '', ELECTRON_RUN_AS_NODE: '1' },
     stdio: 'inherit', windowsHide: true, timeout: 30000
   });

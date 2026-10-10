@@ -5,8 +5,9 @@ const { spawnSync } = require('child_process');
 const root = path.resolve(__dirname, '..');
 const npmCli = process.env.npm_execpath;
 if (!npmCli) throw new Error('Run this script with npm run build:win7');
+const buildEnv = { ...process.env, ELECTRON_BUILDER_CACHE: process.env.ELECTRON_BUILDER_CACHE || path.join(root, '.cache/electron-builder') };
 const run = (args) => {
-  const result = spawnSync(process.execPath, [npmCli, ...args], { cwd: root, stdio: 'inherit', windowsHide: true });
+  const result = spawnSync(process.execPath, [npmCli, ...args], { cwd: root, env: buildEnv, stdio: 'inherit', windowsHide: true });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`npm ${args.join(' ')} failed with exit code ${result.status}`);
 };
@@ -39,3 +40,4 @@ run(['run', 'test:win7:gui']);
 run(['run', 'test:win7:app']);
 run(['run', 'dist:win', '--workspace=packages/bruno-electron', '--', '--x64', '--config.npmRebuild=false',
   ...(process.argv.includes('--dir') ? ['--dir'] : [])]);
+run(['run', 'test:win7:package', '--', 'packages/bruno-electron/out/win-unpacked', '--gui']);

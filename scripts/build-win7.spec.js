@@ -49,7 +49,9 @@ test('installer build orders package prerequisites and every acceptance gate bef
     assert.ok(indexOf(gate) >= 0, gate);
     assert.ok(indexOf(gate) < indexOf('dist:win'), gate);
   }
-  assert.deepEqual(commands.at(-1).slice(-2), ['--x64', '--config.npmRebuild=false']);
+  assert.deepEqual(commands[indexOf('dist:win')].slice(-2), ['--x64', '--config.npmRebuild=false']);
+  assert.ok(indexOf('test:win7:package') > indexOf('dist:win'));
+  assert.deepEqual(commands.at(-1).slice(-2), ['packages/bruno-electron/out/win-unpacked', '--gui']);
   assert.equal(writes.length, 2);
   assert.equal(writes[0][1], path.resolve(__dirname, '../packages/bruno-electron/web'));
 });
@@ -57,7 +59,8 @@ test('installer build orders package prerequisites and every acceptance gate bef
 test('unpacked builds retain the same gates and pass --dir to electron-builder', () => {
   const result = simulate({ args: ['--dir'] });
   assert.equal(result.error, undefined);
-  assert.equal(result.commands.at(-1).at(-1), '--dir');
+  assert.equal(result.commands.find((command) => command.includes('dist:win')).at(-1), '--dir');
+  assert.equal(result.commands.at(-1).includes('test:win7:package'), true);
 });
 
 for (const gate of ['setup:win7', 'test:win7:runtime', 'test:win7:sqlite', 'test:win7:native', 'test:win7:gui', 'test:win7:app']) {
@@ -73,4 +76,10 @@ test('launch errors and direct invocation are reported rather than hidden', () =
   const error = new Error('spawn failed');
   assert.equal(simulate({ spawnError: error }).error, error);
   assert.match(simulate({ npmCli: '' }).error.message, /npm run build:win7/);
+});
+
+test('a failed packaged-app gate fails the build even when source gates passed', () => {
+  const result = simulate({ failure: 'test:win7:package' });
+  assert.match(result.error.message, /failed with exit code 1/);
+  assert.equal(result.commands.at(-1).includes('test:win7:package'), true);
 });
