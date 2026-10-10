@@ -87,6 +87,7 @@
     "test:win7:baseline": "node scripts/check-win7-baseline.js",
     "test:win7:runtime": "node scripts/check-win7-runtime.js",
     "test:win7:sqlite": "node scripts/run-win7-sqlite-tests.js",
+    "test:win7:ipc": "node scripts/check-win7-ipc.js",
     "test:e2e:mock-server": "playwright test --project=mock-server",
     "test:e2e:sanity": "playwright test --project=default --project=system-pac --grep @sanity",
     "test:benchmark": "playwright test --config=playwright.benchmark.config.ts",

@@ -120,7 +120,7 @@ export const sendGrpcMessage = async (item, collectionUid, message) => {
 export const cancelGrpcRequest = async (requestId) => {
   return new Promise((resolve, reject) => {
     const { ipcRenderer } = window;
-    ipcRenderer.invoke('grpc:cancel', requestId)
+    ipcRenderer.invoke('grpc:cancel-request', { requestId })
       .then(resolve)
       .catch(reject);
   });
@@ -134,7 +134,7 @@ export const cancelGrpcRequest = async (requestId) => {
 export const endGrpcStream = async (requestId) => {
   return new Promise((resolve, reject) => {
     const { ipcRenderer } = window;
-    ipcRenderer.invoke('grpc:end', requestId)
+    ipcRenderer.invoke('grpc:end-request', { requestId })
       .then(resolve)
       .catch(reject);
   });
@@ -170,10 +170,10 @@ export const endGrpcConnection = async (connectionId) => {
 export const isGrpcConnectionActive = async (connectionId) => {
   return new Promise((resolve, reject) => {
     const { ipcRenderer } = window;
-    ipcRenderer.invoke('grpc:is-connection-active', connectionId)
+    ipcRenderer.invoke('grpc:get-active-connections')
       .then((response) => {
         if (response.success) {
-          resolve(response.isActive);
+          resolve(response.activeConnectionIds.includes(connectionId));
         } else {
           // If there was an error, assume the connection is not active
           console.error('Error checking connection status:', response.error);

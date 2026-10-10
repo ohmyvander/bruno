@@ -81,6 +81,15 @@ Node or a modern browser. Verify:
 - SQLite: native backend retained on modern Node; Electron 22 uses better-sqlite3
   8.7.0 with ABI 110. Both backends pass 62 tests in 7 suites (2 upstream tests
   remain skipped). Built-package migrations and all 19 statements also pass.
-- Electron protocol and updated IPC adapters: pending.
+- IPC coverage: 326 static channel/method pairs and 9 reviewed dynamic callsites
+  pass the AST check (`npm run test:win7:ipc`). AI helper calls are included;
+  no renderer-wide or datastore-wide wildcard is permitted. Obsolete gRPC helper
+  channel names now use the registered handlers and expected payloads.
+- App-preview protocol: Electron 22 stream-protocol fallback retains the guest
+  partition, secure scheme, per-owner origin, live HTML updates and 404 behavior.
+- Protocol/storage IPC/preload/URL/constants: 33 tests in 6 suites pass on the
+  build host. gRPC renderer helpers: 2 tests pass (unbuilt optional canvas was
+  temporarily excluded from non-canvas jsdom tests). The protocol Jest suite
+  crashes in Electron 22's VM environment; a real GUI protocol test is pending.
 - Packaged Electron 22 checks: pending.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.

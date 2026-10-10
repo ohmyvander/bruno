@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { Readable } = require('stream');
 const { protocol, session } = require('electron');
 
 const APP_SCHEME = 'bruno-app';
@@ -67,16 +68,25 @@ class AppDocuments {
    * Chromium hands the URL to the OS as an external link.
    */
   handleProtocol() {
-    session.fromPartition(APP_PARTITION).protocol.handle(APP_SCHEME, (request) => {
+    const guestProtocol = session.fromPartition(APP_PARTITION).protocol;
+    const headers = {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store'
+    };
+    if (typeof guestProtocol.handle !== 'function') {
+      guestProtocol.registerStreamProtocol(APP_SCHEME, (request, callback) => {
+        const html = this.htmlByToken.get(new URL(request.url).hostname);
+        callback({ statusCode: html === undefined ? 404 : 200, headers, data: Readable.from([html ?? '']) });
+      });
+      return;
+    }
+    guestProtocol.handle(APP_SCHEME, (request) => {
       const html = this.htmlByToken.get(new URL(request.url).hostname);
       if (html === undefined) {
         return new Response(null, { status: 404 });
       }
       return new Response(html, {
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-store'
-        }
+        headers
       });
     });
   }

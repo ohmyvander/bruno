@@ -61,6 +61,17 @@ describe('preload security bridge', () => {
     expect(api.getFilePath({ path: 'C:\\temp\\example.json' })).toBe('C:\\temp\\example.json');
   });
 
+  test('allows new AI and storage channels without wildcard privileges', async () => {
+    const api = loadPreloadApi();
+    await api.invoke('renderer:get-ai-status');
+    await api.invoke('datastore:file-index:file_index_size');
+    api.send('renderer:ai-stream-text', { streamId: 'test' });
+    api.on('main:ai-stream-chunk', jest.fn());
+    expect(() => api.send('renderer:ai-arbitrary-command')).toThrow('Blocked IPC send channel');
+    expect(() => api.on('main:ai-arbitrary-event', jest.fn())).toThrow('Blocked IPC listener channel');
+    await expect(api.invoke('datastore:unknown:execute')).rejects.toThrow('Blocked IPC invoke channel');
+  });
+
   test('opens external links through validated main-process IPC only', async () => {
     const api = loadPreloadApi();
 
