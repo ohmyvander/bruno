@@ -7,9 +7,13 @@
  * compatible with Akamai's reference implementation (github.com/akamai/AkamaiOPEN-edgegrid-node).
  */
 
-// Web Crypto ships natively in the renderer and Node 18+; typed loosely because bruno-common's
-// tsconfig omits the DOM lib.
-const subtle = (globalThis as any).crypto.subtle;
+// Parsing workers on Electron 22 lack global crypto. Only signing needs Web Crypto;
+// defer access so importing the shared package does not require it.
+const getSubtle = () => {
+  const subtle = (globalThis as any).crypto?.subtle;
+  if (!subtle) throw new Error('EdgeGrid signing requires Web Crypto');
+  return subtle;
+};
 
 export const MAX_BODY_SIZE_DEFAULT = 131072; // 128 KB
 
@@ -22,12 +26,13 @@ const toBase64 = (buffer: ArrayBuffer): string => Buffer.from(new Uint8Array(buf
 // base64(HMAC-SHA256(data, key)) — key is a UTF-8 string. As the EdgeGrid signing key it is the
 // base64 STRING of a prior HMAC, passed again as a UTF-8 key — matching Akamai.
 export const base64HmacSha256 = async (data: string, key: string): Promise<string> => {
+  const subtle = getSubtle();
   const cryptoKey = await subtle.importKey('raw', utf8(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   return toBase64(await subtle.sign('HMAC', cryptoKey, utf8(data)));
 };
 
 // base64(SHA-256(data))
-export const base64Sha256 = async (data: string): Promise<string> => toBase64(await subtle.digest('SHA-256', utf8(data)));
+export const base64Sha256 = async (data: string): Promise<string> => toBase64(await getSubtle().digest('SHA-256', utf8(data)));
 
 // EdgeGrid timestamp: YYYYMMDDTHH:MM:SS+0000. `toISOString()` is always UTC (trailing `Z`)
 // irrespective of the system timezone, so dropping the `.sssZ` and appending `+0000` relabels the

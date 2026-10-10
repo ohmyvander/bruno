@@ -99,7 +99,10 @@ Node or a modern browser. Verify:
   and Node VM scripts using Cheerio pass the runtime smoke test.
 - Worker compatibility: CPU-count fallback replaces Node 18-only parallelism;
   file-parsing and Postman-import workers initialize their own Web Crypto globals.
-  Both worker flows pass on Electron 22; worker-pool fallback tests pass (3 tests).
+  EdgeGrid accesses Web Crypto lazily so parsing-only filestore workers can import
+  common without that global. BRU/YAML worker round trips, file parsing and Postman
+  import pass on Electron 22, including from the candidate ASAR. EdgeGrid hashing
+  and official signing vectors pass (8 tests); pool fallback tests pass (3 tests).
 - SQLite: native backend retained on modern Node; Electron 22 uses better-sqlite3
   8.7.0 with ABI 110. Both backends pass 62 tests in 7 suites (2 upstream tests
   remain skipped). Built-package migrations and all 19 statements also pass.
@@ -136,6 +139,10 @@ Node or a modern browser. Verify:
   restricted executor still fails with launch-failed/exitCode 49 (Chromium's
   SBOX_ERROR_CANNOT_CREATE_RESTRICTED_TOKEN), alongside GPU status -1073741515.
   No sandbox bypass or persistent filesystem ACL changes were used.
+- Full application GUI: the first user run exposed filestore Worker initialization
+  errors which are now fixed. Startup acceptance must await onboarding and
+  renderer-ready IPC, detect swallowed main-process errors and verify the sample
+  collection, rather than reporting success on the first renderer mount.
 - Installer/unpacked distribution and packaged startup checks: not completed;
   do not publish this branch as a verified Win7 release yet.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.

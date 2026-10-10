@@ -4,10 +4,11 @@ const { createRequire } = require('module');
 const { spawnSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
-const appRequire = createRequire(path.join(root, 'packages/bruno-electron/package.json'));
+const appRoot = process.env.BRUNO_WIN7_APP_ROOT || path.join(root, 'packages/bruno-electron');
+const appRequire = createRequire(path.join(appRoot, 'package.json'));
 
 if (!process.versions.electron) {
-  const result = spawnSync(appRequire('electron'), [__filename], {
+  const result = spawnSync(process.env.BRUNO_WIN7_ELECTRON_BINARY || appRequire('electron'), [__filename], {
     cwd: root,
     env: { ...process.env, NODE_OPTIONS: '', ELECTRON_RUN_AS_NODE: '1' },
     stdio: 'inherit', windowsHide: true, timeout: 90000
@@ -19,11 +20,17 @@ if (!process.versions.electron) {
 const run = async () => {
   assert.strictEqual(process.versions.electron, '22.3.27');
   assert.strictEqual(process.versions.modules, '110');
+  if (process.env.BRUNO_WIN7_ELECTRON_BINARY) {
+    for (const name of ['@usebruno/common', '@usebruno/filestore', '@usebruno/sqlite', '@usebruno/requests', '@usebruno/converters', '@usebruno/js', 'native-reg']) {
+      assert.ok(appRequire.resolve(name).startsWith(`${appRoot}${path.sep}`), `Dependency escaped the package: ${name}`);
+    }
+  }
   appRequire('./src/compat/node').installNodeCompat();
   assert.strictEqual(await new Response('compatible').text(), 'compatible');
   assert.deepStrictEqual(structuredClone({ bytes: [1, 2] }), { bytes: [1, 2] });
   assert.strictEqual(appRequire('@apidevtools/json-schema-ref-parser').$RefParser instanceof Function, true);
   assert.strictEqual(typeof appRequire('@aws-sdk/credential-providers').fromIni, 'function');
+  assert.strictEqual(typeof appRequire('native-reg').getValue, 'function');
   const { createDatabase } = appRequire('@usebruno/sqlite');
   const database = createDatabase(':memory:');
   assert.ok(database.db?._db, 'SQLite backend must open, not silently disable storage');
@@ -36,6 +43,22 @@ const run = async () => {
   assert.strictEqual(typeof appRequire('@usebruno/requests').makeAxiosInstance, 'function');
   const { mockDataFunctions } = appRequire('@usebruno/common');
   for (const [name, generate] of Object.entries(mockDataFunctions)) assert.notStrictEqual(generate(), undefined, name);
+  const { BruParserWorker } = appRequire('@usebruno/filestore');
+  const parserWorker = new BruParserWorker();
+  try {
+    const sample = 'meta {\n  name: Win7 Worker\n  type: http\n  seq: 1\n}\nget {\n  url: https://example.com\n  body: none\n  auth: none\n}\n';
+    const parsed = await parserWorker.parseRequest(sample, 'bru');
+    assert.strictEqual(parsed.name, 'Win7 Worker');
+    assert.strictEqual(parsed.request.method, 'GET');
+    for (const format of ['bru', 'yml']) {
+      const serialized = await parserWorker.stringifyRequest(parsed, format);
+      const roundTrip = await parserWorker.parseRequest(serialized, format);
+      assert.strictEqual(roundTrip.name, parsed.name);
+      assert.strictEqual(roundTrip.request.url, parsed.request.url);
+    }
+  } finally {
+    await parserWorker.cleanup();
+  }
   const { ScriptRuntime, runScriptInNodeVm } = appRequire('@usebruno/js');
   assert.strictEqual(typeof ScriptRuntime, 'function');
   const Bru = appRequire('@usebruno/js/src/bru');
@@ -111,7 +134,7 @@ const run = async () => {
     server.closeAllConnections?.();
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading, SQLite, faker, scripts, file/import workers and AI generation/streaming passed.`);
+  console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}: Web APIs, AWS/parser loading, SQLite, faker, scripts, filestore/file/import workers and AI generation/streaming passed.`);
   console.log('Windows 7 OS and packaged GUI acceptance are still required.');
 };
 
