@@ -186,4 +186,7 @@ Node or a modern browser. Verify:
   checks also pass. Installation/upgrade/uninstall were
   not run against the user's existing installation. See
   `docs/win7-release-acceptance.md` for artifact paths, hashes and remaining checks.
+- User validation (2026-10-11): basic functionality reported working; detailed
+  acceptance will be performed later. This does not close the full OS/installer/
+  feature acceptance checklist.
 - Windows 7 acceptance: pending; this workspace is not a Windows 7 test host.

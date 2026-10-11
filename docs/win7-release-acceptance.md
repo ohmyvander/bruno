@@ -1,8 +1,10 @@
 # Windows 7 candidate: build-host acceptance
 
-## Status (2026-10-10)
+## Status (2026-10-11)
 
 - Current-host packaged smoke acceptance: **passed** on Windows 10.0.26200 x64.
+- User-reported basic functionality validation: **passed** (2026-10-11);
+  detailed acceptance is deferred to a later validation round.
 - Target: Windows 7 SP1 x64; Electron 22.3.27 / Node 16.17.1 / ABI 110.
 - Windows 7 OS, installer lifecycle and full feature acceptance: **pending**.
 - Validated source/tooling commit: `152e1c2c7f353ef8e60856a815ba184359c7085a`.
